@@ -7,15 +7,37 @@ import (
 )
 
 type User struct {
-	ID          int64          `db:"id"`
-	Name        string         `db:"name"`
-	PhoneNumber string         `db:"phone_number"`
-	Email       sql.NullString `db:"email"`
-	Password    string         `db:"password"`
-	PhotoObj    sql.NullString `db:"photo_object"`
-	IsDeleted   bool           `db:"is_deleted"`
-	CreatedAt   time.Time      `db:"created_at"`
-	UpdatedAt   time.Time      `db:"updated_at"`
+	ID          int64          `db:"id" json:"id"`
+	Name        string         `db:"name" json:"name" validate:"required,min=2,max=100"`
+	PhoneNumber string         `db:"phone_number" json:"phone_number" validate:"required,startswith=+,min=11,max=15"`
+	Email       sql.NullString `db:"email" json:"email,omitempty" validate:"omitempty,email,max=255"`
+	Password    string         `db:"password" json:"-" validate:"required,min=6,max=100"`
+	PhotoObj    sql.NullString `db:"photo_object" json:"photo_url,omitempty"`
+	IsDeleted   bool           `db:"is_deleted" json:"-"`
+	CreatedAt   time.Time      `db:"created_at" json:"created_at"`
+	UpdatedAt   time.Time      `db:"updated_at" json:"updated_at"`
+}
+
+type UserResponse struct {
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	PhoneNumber string    `json:"phone_number"`
+	Email       string    `json:"email,omitempty"`
+	PhotoURL    string    `json:"photo_url,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+func (u *User) ToResponse() UserResponse {
+	return UserResponse{
+		ID:          u.ID,
+		Name:        u.Name,
+		PhoneNumber: u.PhoneNumber,
+		Email:       u.Email.String,
+		PhotoURL:    u.PhotoObj.String,
+		CreatedAt:   u.CreatedAt,
+		UpdatedAt:   u.UpdatedAt,
+	}
 }
 
 type Tokens struct {
@@ -24,22 +46,43 @@ type Tokens struct {
 }
 
 type LoginRequest struct {
-	PhoneNumber string `json:"phone_number" validate:"required"`
-	Password    string `json:"password" validate:"required"`
+	PhoneNumber string `json:"phone_number" validate:"required,startswith=+,min=11,max=15"`
+	Password    string `json:"password" validate:"required,min=6,max=100"`
 }
 
 type SignUpRequest struct {
-	Name        string `json:"name" validate:"required"`
-	PhoneNumber string `json:"phone_number" validate:"required"`
-	Email       string `json:"email"`
-	Password    string `json:"password" validate:"required,min=6"`
+	Name        string `json:"name" validate:"required,min=2,max=100"`
+	PhoneNumber string `json:"phone_number" validate:"required,startswith=+,min=11,max=15"`
+	Email       string `json:"email" validate:"omitempty,email,max=255"`
+	Password    string `json:"password" validate:"required,min=6,max=100"`
 }
 
 type UpdateProfileRequest struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name  string `json:"name" validate:"omitempty,min=2,max=100"`
+	Email string `json:"email" validate:"omitempty,email,max=255"`
+}
+
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password" validate:"required,min=6,max=100"`
+	NewPassword string `json:"new_password" validate:"required,min=6,max=100"`
+}
+
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
 }
 
 type UploadPhotoResponse struct {
 	PhotoURL string `json:"photo_url"`
+}
+type APIResponse struct {
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data,omitempty"`
+	Error   string      `json:"error,omitempty"`
+	Message string      `json:"message,omitempty"`
+}
+
+type ErrorResponse struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+	Code    int    `json:"code,omitempty"`
 }
