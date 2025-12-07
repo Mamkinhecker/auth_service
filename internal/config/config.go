@@ -49,7 +49,7 @@ var App Config
 
 func Init() {
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using environment variables only")
+		log.Println("No fwfw file found, using environment variables only")
 	}
 	v := viper.New()
 
@@ -79,10 +79,18 @@ func Init() {
 	v.SetDefault("minio.domain", "localhost:9000")
 
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
 	v.AutomaticEnv()
 
 	if err := viper.Unmarshal(&App); err != nil {
-		log.Fatalf("ошибка при записи конфига в структуру: %v", err)
+		log.Fatalf("failed to write config: %v", err)
 	}
-	log.Printf("успешно установили конфигурацию!")
+	log.Printf("successfully set config! ")
+	log.Printf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		App.Postgres.Host,
+		App.Postgres.Port,
+		App.Postgres.User,
+		App.Postgres.Password,
+		App.Postgres.DBName,
+		App.Postgres.SSLMode)
 }

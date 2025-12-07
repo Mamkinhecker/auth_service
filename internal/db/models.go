@@ -12,7 +12,7 @@ type User struct {
 	PhoneNumber string         `db:"phone_number" json:"phone_number" validate:"required,startswith=+,min=11,max=15"`
 	Email       sql.NullString `db:"email" json:"email,omitempty" validate:"omitempty,email,max=255"`
 	Password    string         `db:"password" json:"-" validate:"required,min=6,max=100"`
-	PhotoObj    sql.NullString `db:"photo_object" json:"photo_url,omitempty"`
+	PhotoURL    sql.NullString `db:"photo_object" json:"photo_url,omitempty"`
 	IsDeleted   bool           `db:"is_deleted" json:"-"`
 	CreatedAt   time.Time      `db:"created_at" json:"created_at"`
 	UpdatedAt   time.Time      `db:"updated_at" json:"updated_at"`
@@ -34,7 +34,7 @@ func (u *User) ToResponse() UserResponse {
 		Name:        u.Name,
 		PhoneNumber: u.PhoneNumber,
 		Email:       u.Email.String,
-		PhotoURL:    u.PhotoObj.String,
+		PhotoURL:    u.PhotoURL.String,
 		CreatedAt:   u.CreatedAt,
 		UpdatedAt:   u.UpdatedAt,
 	}
@@ -60,11 +60,6 @@ type SignUpRequest struct {
 type UpdateProfileRequest struct {
 	Name  string `json:"name" validate:"omitempty,min=2,max=100"`
 	Email string `json:"email" validate:"omitempty,email,max=255"`
-}
-
-type ChangePasswordRequest struct {
-	OldPassword string `json:"old_password" validate:"required,min=6,max=100"`
-	NewPassword string `json:"new_password" validate:"required,min=6,max=100"`
 }
 
 type RefreshTokenRequest struct {

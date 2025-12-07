@@ -3,6 +3,7 @@ package utils
 import (
 	"auth_service/internal/config"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,11 +14,11 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateAccessToken(UserID int64) (string, error) {
+func GenerateAccessToken(userID int64) (string, error) {
 	cfg := config.App.JWT
 
 	claims := Claims{
-		UserID: UserID,
+		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(parseDuration(cfg.AccessTTL))),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -28,11 +29,11 @@ func GenerateAccessToken(UserID int64) (string, error) {
 	return token.SignedString([]byte(cfg.AccessSecret))
 }
 
-func GenerateRefreshToken(UserID int64) (string, error) {
+func GenerateRefreshToken(userID int64) (string, error) {
 	cfg := config.App.JWT
 
 	claims := Claims{
-		UserID: UserID,
+		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(parseDuration(cfg.RefreshTTL))),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -54,14 +55,14 @@ func ValidateAccessToken(tokenString string) (*Claims, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid access token: %w", err)
 	}
 
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 		return claims, nil
 	}
 
-	return nil, errors.New("invalid token")
+	return nil, errors.New("invalid access token")
 }
 
 func ValidateRefreshToken(tokenString string) (*Claims, error) {
@@ -75,14 +76,14 @@ func ValidateRefreshToken(tokenString string) (*Claims, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid refresh token: %w", err)
 	}
 
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 		return claims, nil
 	}
 
-	return nil, errors.New("invalid token")
+	return nil, errors.New("invalid refresh token")
 }
 
 func parseDuration(durationStr string) time.Duration {

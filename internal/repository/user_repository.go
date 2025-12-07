@@ -21,19 +21,20 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 func (r *UserRepository) Create(ctx context.Context, user *db.User) error {
 	query := `
 		INSERT INTO users (name, phone_number, email, password, photo_object)
-		VALUES ($1, %2, $3, $4, $5)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, updated_at
 	`
 
-	err := r.db.QueryRowContext(ctx, query,
+	err := r.db.QueryRowxContext(ctx, query,
 		user.Name,
 		user.PhoneNumber,
+		user.Email,
 		user.Password,
-		user.PhotoObj,
+		user.PhotoURL,
 	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 
 	if err != nil {
-		return fmt.Errorf("failed to create user: %w", err)
+		return fmt.Errorf("create user: %w", err)
 	}
 
 	return nil
@@ -61,7 +62,7 @@ func (r *UserRepository) GetByPhoneNumber(ctx context.Context, phoneNumber strin
 	err := r.db.GetContext(ctx, &user, query, phoneNumber)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("user not found")
+			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to get user by phone: %w", err)
 	}
@@ -100,7 +101,7 @@ func (r *UserRepository) Update(ctx context.Context, user *db.User) error {
 		user.Name,
 		user.Email,
 		user.PhoneNumber,
-		user.PhotoObj,
+		user.PhotoURL,
 		user.ID,
 	).Scan(&user.UpdatedAt)
 
@@ -112,7 +113,7 @@ func (r *UserRepository) Update(ctx context.Context, user *db.User) error {
 }
 
 func (r *UserRepository) UpdatePassword(ctx context.Context, userID int64, hashedPassword string) error {
-	query := `UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2`
+	query := `UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2 AND is_deleted = false`
 
 	result, err := r.db.ExecContext(ctx, query, hashedPassword, userID)
 	if err != nil {
