@@ -1,7 +1,11 @@
 package config
 
 import (
+	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -48,9 +52,21 @@ type Config struct {
 var App Config
 
 func Init() {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No fwfw file found, using environment variables only")
+	configDir := getConfigDir()
+	log.Printf("Config directory: %s", configDir)
+
+	envPath := filepath.Join(configDir, ".env")
+	log.Printf("Looking for .env at: %s", envPath)
+
+	if _, err := os.Stat(envPath); err != nil {
+		log.Fatalf("no such file")
 	}
+
+	if err := godotenv.Load(envPath); err != nil {
+		log.Println("No env file found, using environment variables only")
+	}
+
+	fmt.Printf(".env file : %s", envPath)
 	v := viper.New()
 
 	v.SetDefault("server.port", "8080")
@@ -82,7 +98,7 @@ func Init() {
 
 	v.AutomaticEnv()
 
-	if err := viper.Unmarshal(&App); err != nil {
+	if err := v.Unmarshal(&App); err != nil {
 		log.Fatalf("failed to write config: %v", err)
 	}
 	log.Printf("successfully set config! ")
@@ -93,4 +109,9 @@ func Init() {
 		App.Postgres.Password,
 		App.Postgres.DBName,
 		App.Postgres.SSLMode)
+}
+
+func getConfigDir() string {
+	_, filename, _, _ := runtime.Caller(0)
+	return filepath.Dir(filename)
 }

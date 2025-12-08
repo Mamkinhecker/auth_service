@@ -51,33 +51,3 @@ func SetupRouter(
 
 	return router
 }
-
-/*
-func SetupRoutes(
-	authHandler *AuthHandler,
-	profileHandler *ProfileHandler,
-) http.Handler {
-	router := mux.NewRouter()
-
-	api := router.PathPrefix("/api/v1").Subrouter()
-
-	auth := api.PathPrefix("/auth").Subrouter()
-	auth.HandleFunc("/signup", authHandler.SignUp).Methods("POST")
-	auth.HandleFunc("/signin", authHandler.SignIn).Methods("POST")
-	auth.HandleFunc("/refresh", authHandler.Refresh).Methods("POST")
-
-	profile := api.PathPrefix("/profile").Subrouter()
-	profile.HandleFunc("", profileHandler.GetProfile).Methods("GET")
-	profile.HandleFunc("", profileHandler.UpdateProfile).Methods("PUT")
-	profile.HandleFunc("", profileHandler.DeleteProfile).Methods("DELETE")
-	profile.HandleFunc("/logout", authHandler.Logout).Methods("POST")
-	profile.HandleFunc("/photo", profileHandler.UploadPhoto).Methods("POST")
-
-	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	}).Methods("GET")
-
-	return router
-}
-*/

@@ -77,6 +77,10 @@ func (s *AuthService) SignIn(ctx context.Context, req db.LoginRequest) (*db.User
 		return nil, nil, errors.New("invalid phone number or password")
 	}
 
+	if user == nil {
+		return nil, nil, errors.New("invalid phone number or password")
+	}
+
 	if !utils.CheckPassword(req.Password, user.Password) {
 		return nil, nil, errors.New("invalid phone number or password")
 	}
