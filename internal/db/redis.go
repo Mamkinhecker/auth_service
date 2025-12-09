@@ -24,15 +24,15 @@ func InitRedis() {
 	defer cancel()
 
 	if err := RedisClient.Ping(ctx).Err(); err != nil {
-		log.Fatalf("не получается подключится к редису: %v", err)
+		log.Fatalf("failed ro connect redis: %v", err)
 	}
 
-	log.Println("подключился к редис успешно")
+	log.Println("connected with redis successfuly")
 }
 
 func CloseRedis() {
 	if RedisClient != nil {
 		RedisClient.Close()
-		log.Println("отключился от редиса")
+		log.Println("closing redis")
 	}
 }

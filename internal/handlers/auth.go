@@ -85,11 +85,11 @@ func (h *AuthHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value("user_id").(int64)
-	if !ok {
+	userID, _ := r.Context().Value("user_id").(int64)
+	/*if !ok {
 		errorResponse(w, "unauthorized", http.StatusUnauthorized)
 		return
-	}
+	}*/
 
 	authHeader := r.Header.Get("Authorization")
 	token := strings.TrimPrefix(authHeader, "Bearer ")
