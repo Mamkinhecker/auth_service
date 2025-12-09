@@ -16,6 +16,15 @@ func NewProfileHandler(profileService *services.ProfileService) *ProfileHandler 
 	return &ProfileHandler{profileService: profileService}
 }
 
+// GetProfile
+// @Summary Получение профиля пользователя
+// @Description Возвращает информацию о пользователе
+// @Tags Profile
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Router /api/v1/profile [get]
 func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
@@ -36,6 +45,18 @@ func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	}, http.StatusOK)
 }
 
+// UpdateProfile
+// @Summary Обновление профиля
+// @Description Обновляет данные пользователя
+// @Tags Profile
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body db.UpdateProfileRequest true "Новые данные"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Router /api/v1/profile [put]
 func (h *ProfileHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
@@ -70,6 +91,15 @@ func (h *ProfileHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}, http.StatusOK)
 }
 
+// DeleteProfile
+// @Summary Удаление профиля
+// @Description Мягкое удаление профиля
+// @Tags Profile
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Router /api/v1/profile [delete]
 func (h *ProfileHandler) DeleteProfile(w http.ResponseWriter, r *http.Request) {
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
@@ -90,6 +120,18 @@ func (h *ProfileHandler) DeleteProfile(w http.ResponseWriter, r *http.Request) {
 	}, http.StatusOK)
 }
 
+// UploadPhoto
+// @Summary Загрузка фото профиля
+// @Description Загружает изображение для профиля
+// @Tags Profile
+// @Security BearerAuth
+// @Accept multipart/form-data
+// @Produce json
+// @Param photo formData file true "Файл изображения"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Router /api/v1/profile/photo [post]
 func (h *ProfileHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {

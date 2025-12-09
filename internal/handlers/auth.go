@@ -17,6 +17,17 @@ func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
+// SignUp
+// @Summary Регистрация нового пользователя
+// @Description Создает нового пользователя в системе
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body db.SignUpRequest true "Данные для регистрации"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Router /api/v1/auth/signup [post]
+
 func (h *AuthHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	var req db.SignUpRequest
 
@@ -51,6 +62,16 @@ func (h *AuthHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, response, http.StatusCreated)
 }
 
+// SignIn
+// @Summary Вход в систему
+// @Description Аутентификация по номеру телефона и паролю
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body db.LoginRequest true "Учетные данные"
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Router /api/v1/auth/signin [post]
 func (h *AuthHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 	var req db.LoginRequest
 
@@ -84,6 +105,16 @@ func (h *AuthHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, response, http.StatusOK)
 }
 
+// Logout
+// @Summary Выход из системы
+// @Description Инвалидирует токены пользователя
+// @Tags Authentication
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Router /api/v1/profile/logout [post]
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	userID, _ := r.Context().Value("user_id").(int64)
 	/*if !ok {
@@ -107,6 +138,16 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	}, http.StatusOK)
 }
 
+// Refresh
+// @Summary Обновление токенов
+// @Description Получение новой пары токенов
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body db.RefreshTokenRequest true "Refresh токен"
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Router /api/v1/auth/refresh [post]
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		RefreshToken string `json:"refresh_token"`

@@ -9,13 +9,25 @@ import (
 	"syscall"
 	"time"
 
+	_ "auth_service/docs"
 	"auth_service/internal/config"
 	"auth_service/internal/db"
 	"auth_service/internal/handlers"
 	"auth_service/internal/repository"
 	"auth_service/internal/services"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// @title Auth Service API
+// @version 1.0.0
+// @description Микросервис аутентификации и управления пользователями с JWT токенами
+// @termsOfService http://swagger.io/terms/
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Введите "Bearer {token}" для авторизации
 func main() {
 	config.Init()
 	log.Println("Configuration loaded")
@@ -38,6 +50,7 @@ func main() {
 	profileHandler := handlers.NewProfileHandler(profileService)
 
 	router := handlers.SetupRouter(authHandler, profileHandler, userRepo, tokenRepo)
+	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	server := &http.Server{
 		Addr:         ":" + config.App.Server.Port,

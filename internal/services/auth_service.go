@@ -14,6 +14,7 @@ import (
 	"auth_service/internal/utils"
 )
 
+// SignUpRequest для регистрации
 type SignUpRequest struct {
 	Name        string `json:"name"`
 	PhoneNumber string `json:"phone_number"`
