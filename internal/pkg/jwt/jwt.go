@@ -1,4 +1,4 @@
-package utils
+package jwt
 
 import (
 	"auth_service/internal/config"

@@ -1,4 +1,4 @@
-package services
+package profileService
 
 import (
 	"context"
@@ -11,26 +11,30 @@ import (
 	"time"
 
 	"auth_service/internal/config"
-	"auth_service/internal/db"
-	"auth_service/internal/repository"
-	"auth_service/internal/utils"
+	model "auth_service/internal/model"
+	"auth_service/internal/pkg/validation"
+	tokenrepo "auth_service/internal/repository/token"
+	userrepo "auth_service/internal/repository/user"
+	db "auth_service/internal/storage/minio"
+
+	//"auth_service/internal/utils"
 
 	"github.com/minio/minio-go/v7"
 )
 
 type ProfileService struct {
-	userRepo  *repository.UserRepository
-	tokenRepo *repository.TokenRepository
+	userRepo  *userrepo.UserRepository
+	tokenRepo *tokenrepo.TokenRepository
 }
 
-func NewProfileService(userRepo *repository.UserRepository, tokenRepo *repository.TokenRepository) *ProfileService {
+func NewProfileService(userRepo *userrepo.UserRepository, tokenRepo *tokenrepo.TokenRepository) *ProfileService {
 	return &ProfileService{
 		userRepo:  userRepo,
 		tokenRepo: tokenRepo,
 	}
 }
 
-func (s *ProfileService) GetProfile(ctx context.Context, userID int64) (*db.User, error) {
+func (s *ProfileService) GetProfile(ctx context.Context, userID int64) (*model.User, error) {
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -41,13 +45,13 @@ func (s *ProfileService) GetProfile(ctx context.Context, userID int64) (*db.User
 	return user, nil
 }
 
-func (s *ProfileService) UpdateProfile(ctx context.Context, userID int64, req db.UpdateProfileRequest) (*db.User, error) {
+func (s *ProfileService) UpdateProfile(ctx context.Context, userID int64, req model.UpdateProfileRequest) (*model.User, error) {
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.Email != "" && !utils.ValidateEmail(req.Email) {
+	if req.Email != "" && !validation.ValidateEmail(req.Email) {
 		return nil, errors.New("invalid email format")
 	}
 
@@ -61,7 +65,7 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, userID int64, req db
 		}
 	}
 
-	user.Name = utils.SanitizeInput(req.Name)
+	user.Name = validation.SanitizeInput(req.Name)
 	if req.Email != "" {
 		user.Email = sql.NullString{String: req.Email, Valid: true}
 	}

@@ -1,11 +1,12 @@
-package repository
+package userrepo
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 
-	"auth_service/internal/db"
+	model "auth_service/internal/model"
+	//"auth_service/internal/storage"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -18,7 +19,7 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) Create(ctx context.Context, user *db.User) error {
+func (r *UserRepository) Create(ctx context.Context, user *model.User) error {
 	query := `
 		INSERT INTO users (name, phone_number, email, password, photo_object)
 		VALUES ($1, $2, $3, $4, $5)
@@ -40,8 +41,8 @@ func (r *UserRepository) Create(ctx context.Context, user *db.User) error {
 	return nil
 }
 
-func (r *UserRepository) GetByID(ctx context.Context, id int64) (*db.User, error) {
-	var user db.User
+func (r *UserRepository) GetByID(ctx context.Context, id int64) (*model.User, error) {
+	var user model.User
 	query := `SELECT * FROM users WHERE id = $1 AND is_deleted = false`
 
 	err := r.db.GetContext(ctx, &user, query, id)
@@ -55,8 +56,8 @@ func (r *UserRepository) GetByID(ctx context.Context, id int64) (*db.User, error
 	return &user, nil
 }
 
-func (r *UserRepository) GetByPhoneNumber(ctx context.Context, phoneNumber string) (*db.User, error) {
-	var user db.User
+func (r *UserRepository) GetByPhoneNumber(ctx context.Context, phoneNumber string) (*model.User, error) {
+	var user model.User
 	query := `SELECT * FROM users WHERE phone_number = $1 AND is_deleted = false`
 
 	err := r.db.GetContext(ctx, &user, query, phoneNumber)
@@ -70,8 +71,8 @@ func (r *UserRepository) GetByPhoneNumber(ctx context.Context, phoneNumber strin
 	return &user, nil
 }
 
-func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*db.User, error) {
-	var user db.User
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+	var user model.User
 	query := `SELECT * FROM users WHERE email = $1 AND is_deleted = false`
 
 	err := r.db.GetContext(ctx, &user, query, email)
@@ -85,7 +86,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*db.User
 	return &user, nil
 }
 
-func (r *UserRepository) Update(ctx context.Context, user *db.User) error {
+func (r *UserRepository) Update(ctx context.Context, user *model.User) error {
 	query := `
 		UPDATE users 
 		SET name = $1, 

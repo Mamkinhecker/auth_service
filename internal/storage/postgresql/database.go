@@ -1,4 +1,4 @@
-package db
+package postgresql
 
 import (
 	"auth_service/internal/config"

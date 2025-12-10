@@ -1,4 +1,4 @@
-package db
+package minio
 
 import (
 	"auth_service/internal/config"

@@ -1,7 +1,11 @@
-package handlers
+package router
 
 import (
-	"auth_service/internal/repository"
+	"auth_service/internal/handler/auth"
+	"auth_service/internal/handler/middleware"
+	"auth_service/internal/handler/profile_handler"
+	tokenrepo "auth_service/internal/repository/token"
+	userrepo "auth_service/internal/repository/user"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -10,16 +14,16 @@ import (
 )
 
 func SetupRouter(
-	authHandler *AuthHandler,
-	profileHandler *ProfileHandler,
-	userRepo *repository.UserRepository,
-	tokenRepo *repository.TokenRepository,
+	authHandler *auth.AuthHandler,
+	profileHandler *profile_handler.ProfileHandler,
+	userRepo *userrepo.UserRepository,
+	tokenRepo *tokenrepo.TokenRepository,
 ) *mux.Router {
 	router := mux.NewRouter()
 
-	router.Use(CORSMiddleware)
-	router.Use(LoggingMiddleware)
-	router.Use(AuthMiddleware(userRepo, tokenRepo))
+	router.Use(middleware.CORSMiddleware)
+	router.Use(middleware.LoggingMiddleware)
+	router.Use(middleware.AuthMiddleware(userRepo, tokenRepo))
 
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

@@ -1,4 +1,4 @@
-package services
+package authService
 
 import (
 	"context"
@@ -9,9 +9,11 @@ import (
 	"time"
 
 	"auth_service/internal/config"
-	"auth_service/internal/db"
-	"auth_service/internal/repository"
-	"auth_service/internal/utils"
+	"auth_service/internal/model"
+	"auth_service/internal/pkg/jwt"
+	"auth_service/internal/pkg/password"
+	tokenrepo "auth_service/internal/repository/token"
+	userrepo "auth_service/internal/repository/user"
 )
 
 // SignUpRequest для регистрации
@@ -23,36 +25,36 @@ type SignUpRequest struct {
 }
 
 type AuthService struct {
-	userRepo  *repository.UserRepository
-	tokenRepo *repository.TokenRepository
+	userRepo  *userrepo.UserRepository
+	tokenRepo *tokenrepo.TokenRepository
 }
 
-func NewAuthService(userRepo *repository.UserRepository, tokenRepo *repository.TokenRepository) *AuthService {
+func NewAuthService(userRepo *userrepo.UserRepository, tokenRepo *tokenrepo.TokenRepository) *AuthService {
 	return &AuthService{
 		userRepo:  userRepo,
 		tokenRepo: tokenRepo,
 	}
 }
 
-func (s *AuthService) SignUp(ctx context.Context, req db.SignUpRequest) (*db.User, *db.Tokens, error) {
-	existingUser, err := s.userRepo.GetByPhoneNumber(ctx, req.PhoneNumber)
+func (s *AuthService) SignUp(ctx context.Context, req model.SignUpRequest) (*model.User, *model.Tokens, error) {
+	existingUser, _ := s.userRepo.GetByPhoneNumber(ctx, req.PhoneNumber)
 	if existingUser != nil {
 		return nil, nil, fmt.Errorf("phone number already registered")
 	}
 
 	if req.Email != "" {
-		existingUser, err = s.userRepo.GetByEmail(ctx, req.Email)
+		existingUser, _ = s.userRepo.GetByEmail(ctx, req.Email)
 		if existingUser != nil {
 			return nil, nil, fmt.Errorf("email already registered")
 		}
 	}
 
-	hashedPassword, err := utils.HashPassword(req.Password)
+	hashedPassword, err := password.HashPassword(req.Password)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	user := &db.User{
+	user := &model.User{
 		Name:        strings.TrimSpace(req.Name),
 		PhoneNumber: req.PhoneNumber,
 		Email:       sql.NullString{String: req.Email, Valid: req.Email != ""},
@@ -72,7 +74,7 @@ func (s *AuthService) SignUp(ctx context.Context, req db.SignUpRequest) (*db.Use
 	return user, tokens, nil
 }
 
-func (s *AuthService) SignIn(ctx context.Context, req db.LoginRequest) (*db.User, *db.Tokens, error) {
+func (s *AuthService) SignIn(ctx context.Context, req model.LoginRequest) (*model.User, *model.Tokens, error) {
 	user, err := s.userRepo.GetByPhoneNumber(ctx, req.PhoneNumber)
 	if err != nil {
 		return nil, nil, errors.New("invalid phone number or password")
@@ -82,7 +84,7 @@ func (s *AuthService) SignIn(ctx context.Context, req db.LoginRequest) (*db.User
 		return nil, nil, errors.New("invalid phone number or password")
 	}
 
-	if !utils.CheckPassword(req.Password, user.Password) {
+	if !password.CheckPassword(req.Password, user.Password) {
 		return nil, nil, errors.New("invalid phone number or password")
 	}
 
@@ -110,8 +112,8 @@ func (s *AuthService) Logout(ctx context.Context, userID int64, accessToken stri
 	return nil
 }
 
-func (s *AuthService) RefreshTokens(ctx context.Context, refreshToken string) (*db.Tokens, error) {
-	claims, err := utils.ValidateRefreshToken(refreshToken)
+func (s *AuthService) RefreshTokens(ctx context.Context, refreshToken string) (*model.Tokens, error) {
+	claims, err := jwt.ValidateRefreshToken(refreshToken)
 	if err != nil {
 		return nil, errors.New("invalid or expired refresh token")
 	}
@@ -141,13 +143,13 @@ func (s *AuthService) RefreshTokens(ctx context.Context, refreshToken string) (*
 	return tokens, nil
 }
 
-func (s *AuthService) generateTokens(userID int64) (*db.Tokens, error) {
-	accessToken, err := utils.GenerateAccessToken(userID)
+func (s *AuthService) generateTokens(userID int64) (*model.Tokens, error) {
+	accessToken, err := jwt.GenerateAccessToken(userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate access token: %w", err)
 	}
 
-	refreshToken, err := utils.GenerateRefreshToken(userID)
+	refreshToken, err := jwt.GenerateRefreshToken(userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
 
@@ -159,7 +161,7 @@ func (s *AuthService) generateTokens(userID int64) (*db.Tokens, error) {
 		return nil, fmt.Errorf("failed to store refresh token: %w", err)
 	}
 
-	return &db.Tokens{
+	return &model.Tokens{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil

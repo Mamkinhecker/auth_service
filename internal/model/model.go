@@ -1,5 +1,5 @@
-// internal/db/models.go
-package db
+// internal/model/models.go
+package model
 
 import (
 	"database/sql"

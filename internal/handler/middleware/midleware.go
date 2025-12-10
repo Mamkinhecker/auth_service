@@ -1,4 +1,4 @@
-package handlers
+package middleware
 
 import (
 	"context"
@@ -7,15 +7,19 @@ import (
 	"strings"
 	"time"
 
-	"auth_service/internal/repository"
-	"auth_service/internal/utils"
+	//"auth_service/internal/repository/profile"
+	"auth_service/internal/handler/auth"
+	"auth_service/internal/pkg/jwt"
+	tokenrepo "auth_service/internal/repository/token"
+	userrepo "auth_service/internal/repository/user"
+	//"auth_service/internal/utils"
 )
 
 type contextKey string
 
 const userIDKey contextKey = "user_id"
 
-func AuthMiddleware(userRepo *repository.UserRepository, tokenRepo *repository.TokenRepository) func(http.Handler) http.Handler {
+func AuthMiddleware(userRepo *userrepo.UserRepository, tokenRepo *tokenrepo.TokenRepository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -29,31 +33,31 @@ func AuthMiddleware(userRepo *repository.UserRepository, tokenRepo *repository.T
 
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				errorResponse(w, "authorization header required", http.StatusUnauthorized)
+				auth.ErrorResponse(w, "authorization header required", http.StatusUnauthorized)
 				return
 			}
 
 			parts := strings.Split(authHeader, " ")
 			if len(parts) != 2 || parts[0] != "Bearer" {
-				errorResponse(w, "invalid authorization format", http.StatusUnauthorized)
+				auth.ErrorResponse(w, "invalid authorization format", http.StatusUnauthorized)
 				return
 			}
 
 			token := parts[1]
 
-			claims, err := utils.ValidateAccessToken(token)
+			claims, err := jwt.ValidateAccessToken(token)
 			if err != nil {
-				errorResponse(w, "invalid or expired token", http.StatusUnauthorized)
+				auth.ErrorResponse(w, "invalid or expired token", http.StatusUnauthorized)
 				return
 			}
 
 			blacklisted, err := tokenRepo.IsTokenBlacklisted(r.Context(), token)
 			if err != nil {
-				errorResponse(w, "internal server error", http.StatusInternalServerError)
+				auth.ErrorResponse(w, "internal server error", http.StatusInternalServerError)
 				return
 			}
 			if blacklisted {
-				errorResponse(w, "token is blacklisted", http.StatusUnauthorized)
+				auth.ErrorResponse(w, "token is blacklisted", http.StatusUnauthorized)
 				return
 			}
 

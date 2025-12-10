@@ -1,19 +1,19 @@
-package handlers
+package auth
 
 import (
 	"encoding/json"
 	"net/http"
 	"strings"
 
-	"auth_service/internal/db"
-	"auth_service/internal/services"
+	"auth_service/internal/model"
+	authService "auth_service/internal/service/auth"
 )
 
 type AuthHandler struct {
-	authService *services.AuthService
+	authService *authService.AuthService
 }
 
-func NewAuthHandler(authService *services.AuthService) *AuthHandler {
+func NewAuthHandler(authService *authService.AuthService) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
@@ -29,7 +29,7 @@ func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 // @Router /api/v1/auth/signup [post]
 
 func (h *AuthHandler) SignUp(w http.ResponseWriter, r *http.Request) {
-	var req db.SignUpRequest
+	var req model.SignUpRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -39,7 +39,7 @@ func (h *AuthHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	user, tokens, err := h.authService.SignUp(ctx, req)
 	if err != nil {
-		errorResponse(w, err.Error(), http.StatusBadRequest)
+		ErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -59,7 +59,7 @@ func (h *AuthHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		"message": "registration successful",
 	}
 
-	jsonResponse(w, response, http.StatusCreated)
+	JsonResponse(w, response, http.StatusCreated)
 }
 
 // SignIn
@@ -73,7 +73,7 @@ func (h *AuthHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} map[string]interface{}
 // @Router /api/v1/auth/signin [post]
 func (h *AuthHandler) SignIn(w http.ResponseWriter, r *http.Request) {
-	var req db.LoginRequest
+	var req model.LoginRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -83,7 +83,7 @@ func (h *AuthHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	user, tokens, err := h.authService.SignIn(ctx, req)
 	if err != nil {
-		errorResponse(w, "Invalid credentials", http.StatusUnauthorized)
+		ErrorResponse(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
@@ -102,7 +102,7 @@ func (h *AuthHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		"message": "login successful",
 	}
 
-	jsonResponse(w, response, http.StatusOK)
+	JsonResponse(w, response, http.StatusOK)
 }
 
 // Logout
@@ -128,11 +128,11 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	err := h.authService.Logout(ctx, userID, token)
 	if err != nil {
-		errorResponse(w, "Logout failed", http.StatusInternalServerError)
+		ErrorResponse(w, "Logout failed", http.StatusInternalServerError)
 		return
 	}
 
-	jsonResponse(w, map[string]interface{}{
+	JsonResponse(w, map[string]interface{}{
 		"success": true,
 		"message": "logged out successfully",
 	}, http.StatusOK)
@@ -161,18 +161,18 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	tokens, err := h.authService.RefreshTokens(ctx, req.RefreshToken)
 	if err != nil {
-		errorResponse(w, "invalid or expired refresh token", http.StatusUnauthorized)
+		ErrorResponse(w, "invalid or expired refresh token", http.StatusUnauthorized)
 		return
 	}
 
-	jsonResponse(w, map[string]interface{}{
+	JsonResponse(w, map[string]interface{}{
 		"success": true,
 		"data":    tokens,
 		"message": "tokens refreshed",
 	}, http.StatusOK)
 }
 
-func errorResponse(w http.ResponseWriter, message string, statusCode int) {
+func ErrorResponse(w http.ResponseWriter, message string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -181,7 +181,7 @@ func errorResponse(w http.ResponseWriter, message string, statusCode int) {
 	})
 }
 
-func jsonResponse(w http.ResponseWriter, data interface{}, statusCode int) {
+func JsonResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(data)
