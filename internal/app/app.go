@@ -55,6 +55,9 @@ func Run() {
 	<-quit
 	log.Println("Shutting down server...")
 
+	postgresql.ClosePostgres()
+	redis.CloseRedis()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 

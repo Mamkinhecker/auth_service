@@ -9,6 +9,13 @@ import (
 	authService "auth_service/internal/service/auth"
 )
 
+type Auth_handler interface {
+	SignUp(w http.ResponseWriter, r *http.Request)
+	SignIn(w http.ResponseWriter, r *http.Request)
+	Logout(w http.ResponseWriter, r *http.Request)
+	Refresh(w http.ResponseWriter, r *http.Request)
+}
+
 type AuthHandler struct {
 	authService *authService.AuthService
 }

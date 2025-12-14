@@ -13,10 +13,8 @@ func BuildStorage() {
 	log.Println("Configuration loaded")
 
 	postgresql.InitPostgres()
-	defer postgresql.ClosePostgres()
 
 	redis.InitRedis()
-	defer redis.CloseRedis()
 
 	minio.InitMinio()
 
