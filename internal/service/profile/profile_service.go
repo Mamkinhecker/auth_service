@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"auth_service/internal/config"
-	model "auth_service/internal/model"
+	"auth_service/internal/model/request"
+	"auth_service/internal/model/user"
 	"auth_service/internal/pkg/validation"
 	tokenrepo "auth_service/internal/repository/token"
 	userrepo "auth_service/internal/repository/user"
@@ -21,6 +22,13 @@ import (
 
 	"github.com/minio/minio-go/v7"
 )
+
+type Profile_Service interface {
+	GetProfile(ctx context.Context, userID int64) *ProfileService
+	UpdateProfile(ctx context.Context, userID int64, req request.UpdateProfileRequest) (*user.User, error)
+	DeleteProfile(ctx context.Context, userID int64) error
+	UploadPhoto(ctx context.Context, userID int64, file io.Reader, fileName string, fileSize int64) (string, error)
+}
 
 type ProfileService struct {
 	userRepo  *userrepo.UserRepository
@@ -34,7 +42,7 @@ func NewProfileService(userRepo *userrepo.UserRepository, tokenRepo *tokenrepo.T
 	}
 }
 
-func (s *ProfileService) GetProfile(ctx context.Context, userID int64) (*model.User, error) {
+func (s *ProfileService) GetProfile(ctx context.Context, userID int64) (*user.User, error) {
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -45,7 +53,7 @@ func (s *ProfileService) GetProfile(ctx context.Context, userID int64) (*model.U
 	return user, nil
 }
 
-func (s *ProfileService) UpdateProfile(ctx context.Context, userID int64, req model.UpdateProfileRequest) (*model.User, error) {
+func (s *ProfileService) UpdateProfile(ctx context.Context, userID int64, req request.UpdateProfileRequest) (*user.User, error) {
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, err

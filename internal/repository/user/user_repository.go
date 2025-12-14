@@ -1,15 +1,23 @@
 package userrepo
 
 import (
+	"auth_service/internal/model/user"
 	"context"
 	"database/sql"
 	"fmt"
 
-	model "auth_service/internal/model"
-
 	"github.com/jmoiron/sqlx"
 )
 
+type User_Repository interface {
+	Create(ctx context.Context, user *user.User) error
+	GetByID(ctx context.Context, id int64) (*user.User, error)
+	GetByPhoneNumber(ctx context.Context, phoneNumber string) (*user.User, error)
+	GetByEmail(ctx context.Context, email string) (*user.User, error)
+	Update(ctx context.Context, user *user.User) error
+	UpdatePassword(ctx context.Context, userID int64, hashedPassword string) error
+	SoftDelete(ctx context.Context, id int64) error
+}
 type UserRepository struct {
 	db *sqlx.DB
 }
@@ -18,7 +26,7 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) Create(ctx context.Context, user *model.User) error {
+func (r *UserRepository) Create(ctx context.Context, user *user.User) error {
 	query := `
 		INSERT INTO users (name, phone_number, email, password, photo_object)
 		VALUES ($1, $2, $3, $4, $5)
@@ -40,8 +48,8 @@ func (r *UserRepository) Create(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-func (r *UserRepository) GetByID(ctx context.Context, id int64) (*model.User, error) {
-	var user model.User
+func (r *UserRepository) GetByID(ctx context.Context, id int64) (*user.User, error) {
+	var user user.User
 	query := `SELECT * FROM users WHERE id = $1 AND is_deleted = false`
 
 	err := r.db.GetContext(ctx, &user, query, id)
@@ -55,8 +63,8 @@ func (r *UserRepository) GetByID(ctx context.Context, id int64) (*model.User, er
 	return &user, nil
 }
 
-func (r *UserRepository) GetByPhoneNumber(ctx context.Context, phoneNumber string) (*model.User, error) {
-	var user model.User
+func (r *UserRepository) GetByPhoneNumber(ctx context.Context, phoneNumber string) (*user.User, error) {
+	var user user.User
 	query := `SELECT * FROM users WHERE phone_number = $1 AND is_deleted = false`
 
 	err := r.db.GetContext(ctx, &user, query, phoneNumber)
@@ -70,8 +78,8 @@ func (r *UserRepository) GetByPhoneNumber(ctx context.Context, phoneNumber strin
 	return &user, nil
 }
 
-func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
-	var user model.User
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*user.User, error) {
+	var user user.User
 	query := `SELECT * FROM users WHERE email = $1 AND is_deleted = false`
 
 	err := r.db.GetContext(ctx, &user, query, email)
@@ -85,7 +93,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.U
 	return &user, nil
 }
 
-func (r *UserRepository) Update(ctx context.Context, user *model.User) error {
+func (r *UserRepository) Update(ctx context.Context, user *user.User) error {
 	query := `
 		UPDATE users 
 		SET name = $1, 

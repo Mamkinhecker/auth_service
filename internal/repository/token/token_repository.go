@@ -10,6 +10,14 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+type Token_Repository interface {
+	StoreRefreshToken(ctx context.Context, userID int64, token string) error
+	GetRefreshToken(ctx context.Context, userID int64) (string, error)
+	DeleteRefreshToken(ctx context.Context, userID int64) error
+	StoreBlacklistedToken(ctx context.Context, token string, ttl time.Duration) error
+	IsTokenBlacklisted(ctx context.Context, token string) (bool, error)
+}
+
 type TokenRepository struct {
 	redisClient *redis.Client
 }

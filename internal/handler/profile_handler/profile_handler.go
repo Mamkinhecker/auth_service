@@ -6,7 +6,7 @@ import (
 
 	"auth_service/internal/handler/auth"
 	"auth_service/internal/handler/middleware"
-	"auth_service/internal/model"
+	"auth_service/internal/model/request"
 	profileService "auth_service/internal/service/profile"
 )
 
@@ -77,7 +77,7 @@ func (h *ProfileHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	user, err := h.profileService.UpdateProfile(ctx, userID, model.UpdateProfileRequest{
+	user, err := h.profileService.UpdateProfile(ctx, userID, request.UpdateProfileRequest{
 		Name:  req.Name,
 		Email: req.Email,
 	})

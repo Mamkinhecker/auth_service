@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"auth_service/internal/model"
+	"auth_service/internal/model/request"
 	authService "auth_service/internal/service/auth"
 )
 
@@ -29,7 +29,7 @@ func NewAuthHandler(authService *authService.AuthService) *AuthHandler {
 // @Router /api/v1/auth/signup [post]
 
 func (h *AuthHandler) SignUp(w http.ResponseWriter, r *http.Request) {
-	var req model.SignUpRequest
+	var req request.SignUpRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -73,7 +73,7 @@ func (h *AuthHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} map[string]interface{}
 // @Router /api/v1/auth/signin [post]
 func (h *AuthHandler) SignIn(w http.ResponseWriter, r *http.Request) {
-	var req model.LoginRequest
+	var req request.LoginRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
