@@ -31,3 +31,8 @@ type UpdateProfileRequest struct {
 	Name  string `json:"name" validate:"omitempty,min=2,max=100"`
 	Email string `json:"email" validate:"omitempty,email,max=255"`
 }
+
+// @Param request body db.RefreshTokenRequest true "Refresh токен"
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}

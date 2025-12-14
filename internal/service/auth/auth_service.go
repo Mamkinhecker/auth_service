@@ -23,6 +23,9 @@ type Auth_Service interface {
 	SignUp(ctx context.Context, req request.SignUpRequest) (*user.User, *user.Tokens, error)
 	SignIn(ctx context.Context, req request.LoginRequest) (*user.User, *user.Tokens, error)
 	Logout(ctx context.Context, userID int64, accessToken string) error
+}
+
+type Manage_tokens interface {
 	RefreshTokens(ctx context.Context, refreshToken string) (*user.Tokens, error)
 	generateTokens(userID int64) (*user.Tokens, error)
 }

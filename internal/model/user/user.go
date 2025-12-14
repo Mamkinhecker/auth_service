@@ -29,3 +29,8 @@ func (u *User) ToResponse() responce.UserResponse {
 		UpdatedAt:   u.UpdatedAt,
 	}
 }
+
+type Tokens struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}

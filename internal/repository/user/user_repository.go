@@ -9,14 +9,17 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type User_Repository interface {
+type User_Profile_Repository interface {
+	Update(ctx context.Context, user *user.User) error
+	UpdatePassword(ctx context.Context, userID int64, hashedPassword string) error
+	SoftDelete(ctx context.Context, id int64) error
+}
+
+type User_Registr_Repository interface {
 	Create(ctx context.Context, user *user.User) error
 	GetByID(ctx context.Context, id int64) (*user.User, error)
 	GetByPhoneNumber(ctx context.Context, phoneNumber string) (*user.User, error)
 	GetByEmail(ctx context.Context, email string) (*user.User, error)
-	Update(ctx context.Context, user *user.User) error
-	UpdatePassword(ctx context.Context, userID int64, hashedPassword string) error
-	SoftDelete(ctx context.Context, id int64) error
 }
 type UserRepository struct {
 	db *sqlx.DB

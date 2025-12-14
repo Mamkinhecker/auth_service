@@ -35,3 +35,21 @@ type UserResponse struct {
 	// @Example 2024-12-09T01:30:00Z
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+// UploadPhotoResponse для ответа с фото
+type UploadPhotoResponse struct {
+	PhotoURL string `json:"photo_url"`
+}
+
+type APIResponse struct {
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data,omitempty"`
+	Error   string      `json:"error,omitempty"`
+	Message string      `json:"message,omitempty"`
+}
+
+type ErrorResponse struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+	Code    int    `json:"code,omitempty"`
+}

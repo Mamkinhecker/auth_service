@@ -10,6 +10,13 @@ import (
 	profileService "auth_service/internal/service/profile"
 )
 
+type Profile_Handler interface {
+	GetProfile(w http.ResponseWriter, r *http.Request)
+	UpdateProfile(w http.ResponseWriter, r *http.Request)
+	DeleteProfile(w http.ResponseWriter, r *http.Request)
+	UploadPhoto(w http.ResponseWriter, r *http.Request)
+}
+
 type ProfileHandler struct {
 	profileService *profileService.ProfileService
 }
