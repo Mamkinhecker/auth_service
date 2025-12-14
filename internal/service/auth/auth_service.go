@@ -13,10 +13,10 @@ import (
 	"auth_service/internal/model/user"
 
 	//"auth_service/internal/model"
-	"auth_service/internal/pkg/jwt"
-	"auth_service/internal/pkg/password"
 	tokenrepo "auth_service/internal/repository/token"
 	userrepo "auth_service/internal/repository/user"
+	"auth_service/pkg/jwt"
+	"auth_service/pkg/password"
 )
 
 type Auth_Service interface {

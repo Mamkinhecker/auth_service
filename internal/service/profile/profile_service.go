@@ -13,10 +13,10 @@ import (
 	"auth_service/internal/config"
 	"auth_service/internal/model/request"
 	"auth_service/internal/model/user"
-	"auth_service/internal/pkg/validation"
 	tokenrepo "auth_service/internal/repository/token"
 	userrepo "auth_service/internal/repository/user"
 	db "auth_service/internal/storage/minio"
+	"auth_service/pkg/validation"
 
 	//"auth_service/internal/utils"
 

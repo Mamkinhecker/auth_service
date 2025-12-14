@@ -7,12 +7,10 @@ import (
 	"strings"
 	"time"
 
-	//"auth_service/internal/repository/profile"
 	"auth_service/internal/handler/auth"
-	"auth_service/internal/pkg/jwt"
 	tokenrepo "auth_service/internal/repository/token"
 	userrepo "auth_service/internal/repository/user"
-	//"auth_service/internal/utils"
+	"auth_service/pkg/jwt"
 )
 
 type contextKey string
