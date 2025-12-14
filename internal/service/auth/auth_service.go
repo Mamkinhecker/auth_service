@@ -16,14 +16,6 @@ import (
 	userrepo "auth_service/internal/repository/user"
 )
 
-// SignUpRequest для регистрации
-type SignUpRequest struct {
-	Name        string `json:"name"`
-	PhoneNumber string `json:"phone_number"`
-	Email       string `json:"email"`
-	Password    string `json:"password"`
-}
-
 type AuthService struct {
 	userRepo  *userrepo.UserRepository
 	tokenRepo *tokenrepo.TokenRepository

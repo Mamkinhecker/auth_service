@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	model "auth_service/internal/model"
-	//"auth_service/internal/storage"
 
 	"github.com/jmoiron/sqlx"
 )
