@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"auth_service/internal/handler/auth"
-	"auth_service/internal/handler/middleware"
+	"auth_service/internal/middleware"
 	"auth_service/internal/model/request"
 	profileService "auth_service/internal/service/profile"
 )

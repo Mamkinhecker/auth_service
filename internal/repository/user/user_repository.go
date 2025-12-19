@@ -16,7 +16,7 @@ type User_Repository interface {
 	GetByEmail(ctx context.Context, email string) (*user.User, error)
 	Update(ctx context.Context, user *user.User) error
 	UpdatePassword(ctx context.Context, userID int64, hashedPassword string) error
-	SoftDelete(ctx context.Context, id int64) error
+	Delete(ctx context.Context, id int64) error
 }
 type UserRepository struct {
 	db *sqlx.DB
@@ -140,7 +140,7 @@ func (r *UserRepository) UpdatePassword(ctx context.Context, userID int64, hashe
 	return nil
 }
 
-func (r *UserRepository) SoftDelete(ctx context.Context, id int64) error {
+func (r *UserRepository) Delete(ctx context.Context, id int64) error {
 	query := `UPDATE users SET is_deleted = true, updated_at = NOW() WHERE id = $1`
 
 	result, err := r.db.ExecContext(ctx, query, id)

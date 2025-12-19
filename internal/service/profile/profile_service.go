@@ -89,7 +89,7 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, userID int64, req re
 }
 
 func (s *ProfileService) DeleteProfile(ctx context.Context, userID int64) error {
-	err := s.userRepo.SoftDelete(ctx, userID)
+	err := s.userRepo.Delete(ctx, userID)
 	if err != nil {
 		return err
 	}

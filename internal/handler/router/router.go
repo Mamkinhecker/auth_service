@@ -2,8 +2,8 @@ package router
 
 import (
 	"auth_service/internal/handler/auth"
-	"auth_service/internal/handler/middleware"
 	"auth_service/internal/handler/profile_handler"
+	"auth_service/internal/middleware"
 	tokenrepo "auth_service/internal/repository/token"
 	userrepo "auth_service/internal/repository/user"
 	"encoding/json"

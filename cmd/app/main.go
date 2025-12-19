@@ -5,7 +5,6 @@ import (
 
 	_ "auth_service/docs"
 	"auth_service/internal/app"
-	"auth_service/internal/storage"
 )
 
 // @title Auth Service API
@@ -19,8 +18,6 @@ import (
 // @name Authorization
 // @description Введите "Bearer {token}" для авторизации
 func main() {
-
-	storage.BuildStorage()
 	app.Run()
 	log.Println("Server exited properly")
 }

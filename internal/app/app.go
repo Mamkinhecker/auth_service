@@ -4,11 +4,12 @@ import (
 	"auth_service/internal/config"
 	"auth_service/internal/handler/auth"
 	"auth_service/internal/handler/profile_handler"
+	"auth_service/internal/handler/router"
 	tokenrepo "auth_service/internal/repository/token"
 	userrepo "auth_service/internal/repository/user"
-	"auth_service/internal/router"
 	authService "auth_service/internal/service/auth"
 	profileService "auth_service/internal/service/profile"
+	"auth_service/internal/storage"
 	"auth_service/internal/storage/postgresql"
 	"auth_service/internal/storage/redis"
 	"context"
@@ -23,6 +24,8 @@ import (
 )
 
 func Run() {
+
+	storage.BuildStorage()
 
 	userRepo := userrepo.NewUserRepository(postgresql.DB)
 	tokenRepo := tokenrepo.NewTokenRepository(redis.RedisClient)
