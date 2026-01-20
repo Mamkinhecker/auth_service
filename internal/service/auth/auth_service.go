@@ -1,0 +1,182 @@
+package authService
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
+	"auth_service/internal/config"
+	"auth_service/internal/model/request"
+	"auth_service/internal/model/user"
+
+	//"auth_service/internal/model"
+	tokenrepo "auth_service/internal/repository/token"
+	userrepo "auth_service/internal/repository/user"
+	"auth_service/pkg/jwt"
+	"auth_service/pkg/password"
+)
+
+type Auth_Service interface {
+	SignUp(ctx context.Context, req request.SignUpRequest) (*user.User, *user.Tokens, error)
+	SignIn(ctx context.Context, req request.LoginRequest) (*user.User, *user.Tokens, error)
+	Logout(ctx context.Context, userID int64, accessToken string) error
+}
+
+type Manage_tokens interface {
+	RefreshTokens(ctx context.Context, refreshToken string) (*user.Tokens, error)
+	generateTokens(userID int64) (*user.Tokens, error)
+}
+
+type AuthService struct {
+	userRepo  *userrepo.UserRepository
+	tokenRepo *tokenrepo.TokenRepository
+}
+
+func NewAuthService(userRepo *userrepo.UserRepository, tokenRepo *tokenrepo.TokenRepository) *AuthService {
+	return &AuthService{
+		userRepo:  userRepo,
+		tokenRepo: tokenRepo,
+	}
+}
+
+func (s *AuthService) SignUp(ctx context.Context, req request.SignUpRequest) (*user.User, *user.Tokens, error) {
+	existingUser, _ := s.userRepo.GetByPhoneNumber(ctx, req.PhoneNumber)
+	if existingUser != nil {
+		return nil, nil, fmt.Errorf("phone number already registered")
+	}
+
+	if req.Email != "" {
+		existingUser, _ = s.userRepo.GetByEmail(ctx, req.Email)
+		if existingUser != nil {
+			return nil, nil, fmt.Errorf("email already registered")
+		}
+	}
+
+	hashedPassword, err := password.HashPassword(req.Password)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	user := &user.User{
+		Name:        strings.TrimSpace(req.Name),
+		PhoneNumber: req.PhoneNumber,
+		Email:       sql.NullString{String: req.Email, Valid: req.Email != ""},
+		Password:    hashedPassword,
+	}
+
+	err = s.userRepo.Create(ctx, user)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	tokens, err := s.generateTokens(user.ID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate tokens: %w", err)
+	}
+
+	return user, tokens, nil
+}
+
+func (s *AuthService) SignIn(ctx context.Context, req request.LoginRequest) (*user.User, *user.Tokens, error) {
+	user, err := s.userRepo.GetByPhoneNumber(ctx, req.PhoneNumber)
+	if err != nil {
+		return nil, nil, errors.New("invalid phone number or password")
+	}
+
+	if user == nil {
+		return nil, nil, errors.New("invalid phone number or password")
+	}
+
+	if !password.CheckPassword(req.Password, user.Password) {
+		return nil, nil, errors.New("invalid phone number or password")
+	}
+
+	tokens, err := s.generateTokens(user.ID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate tokens: %w", err)
+	}
+
+	return user, tokens, nil
+}
+
+func (s *AuthService) Logout(ctx context.Context, userID int64, accessToken string) error {
+	err := s.tokenRepo.DeleteRefreshToken(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to delete refresh token: %w", err)
+	}
+
+	ttl := parseDuration(config.App.JWT.AccessTTL)
+	err = s.tokenRepo.StoreBlacklistedToken(ctx, accessToken, ttl)
+
+	if err != nil {
+		return fmt.Errorf("failed to blacklist token: %w", err)
+	}
+
+	return nil
+}
+
+func (s *AuthService) RefreshTokens(ctx context.Context, refreshToken string) (*user.Tokens, error) {
+	claims, err := jwt.ValidateRefreshToken(refreshToken)
+	if err != nil {
+		return nil, errors.New("invalid or expired refresh token")
+	}
+
+	blacklisted, err := s.tokenRepo.IsTokenBlacklisted(ctx, refreshToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check token blacklist: %w", err)
+	}
+	if blacklisted {
+		return nil, errors.New("token is blacklisted")
+	}
+
+	storedToken, err := s.tokenRepo.GetRefreshToken(ctx, claims.UserID)
+	if err != nil {
+		return nil, errors.New("refresh token not found")
+	}
+
+	if storedToken != refreshToken {
+		return nil, errors.New("refresh token mismatch")
+	}
+
+	tokens, err := s.generateTokens(claims.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate new tokens: %w", err)
+	}
+
+	return tokens, nil
+}
+
+func (s *AuthService) generateTokens(userID int64) (*user.Tokens, error) {
+	accessToken, err := jwt.GenerateAccessToken(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate access token: %w", err)
+	}
+
+	refreshToken, err := jwt.GenerateRefreshToken(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
+
+	}
+
+	ctx := context.Background()
+	err = s.tokenRepo.StoreRefreshToken(ctx, userID, refreshToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to store refresh token: %w", err)
+	}
+
+	return &user.Tokens{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
+}
+
+func parseDuration(durationStr string) time.Duration {
+	dur, err := time.ParseDuration(durationStr)
+	if err != nil {
+		return 15 * time.Minute // default
+	}
+	return dur
+}

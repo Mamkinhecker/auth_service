@@ -1,0 +1,236 @@
+basePath: /
+definitions:
+  auth_service_internal_db.LoginRequest:
+    properties:
+      password:
+        maxLength: 100
+        minLength: 6
+        type: string
+      phone_number:
+        maxLength: 15
+        minLength: 11
+        type: string
+    required:
+    - password
+    - phone_number
+    type: object
+  auth_service_internal_db.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  auth_service_internal_db.UpdateProfileRequest:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Микросервис аутентификации и управления пользователями с JWT токенами
+  termsOfService: http://swagger.io/terms/
+  title: Auth Service API
+  version: 1.0.0
+paths:
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Получение новой пары токенов
+      parameters:
+      - description: Refresh токен
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth_service_internal_db.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Обновление токенов
+      tags:
+      - Authentication
+  /api/v1/auth/signin:
+    post:
+      consumes:
+      - application/json
+      description: Аутентификация по номеру телефона и паролю
+      parameters:
+      - description: Учетные данные
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth_service_internal_db.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Вход в систему
+      tags:
+      - Authentication
+  /api/v1/profile:
+    delete:
+      description: Мягкое удаление профиля
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Удаление профиля
+      tags:
+      - Profile
+    get:
+      description: Возвращает информацию о пользователе
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Получение профиля пользователя
+      tags:
+      - Profile
+    put:
+      consumes:
+      - application/json
+      description: Обновляет данные пользователя
+      parameters:
+      - description: Новые данные
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth_service_internal_db.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Обновление профиля
+      tags:
+      - Profile
+  /api/v1/profile/logout:
+    post:
+      consumes:
+      - application/json
+      description: Инвалидирует токены пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Выход из системы
+      tags:
+      - Authentication
+  /api/v1/profile/photo:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Загружает изображение для профиля
+      parameters:
+      - description: Файл изображения
+        in: formData
+        name: photo
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Загрузка фото профиля
+      tags:
+      - Profile
+securityDefinitions:
+  BearerAuth:
+    description: Введите "Bearer {token}" для авторизации
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
